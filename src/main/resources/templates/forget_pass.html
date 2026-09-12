@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="Fragments/header :: header">
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <nav th:replace="Fragments/login_navbar :: login_navbar"></nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <div>
+                    <img th:src="@{/Images/boy.png}" class="card-img" alt="">
+                </div>
+            </div>
+            <div class="col d-flex justify-content-center align-items-center" style="margin-top: 100px;">
+                <div class="container text-center" style="max-width: 400px">
+
+                    <div style="font-family: Arial, Helvetica, sans-serif; font-size: large;">
+                        <h2>Recover your Gurukulam account</h2>
+                    </div>
+
+                    <form th:action="@{/send_otp}" method="post" class="mt-4">
+                        <input type="text" name="credential" placeholder="enter username / email" required
+                               class="form-control mb-3 text-center">
+                        <input type="submit" value="Get OTP" class="btn btn-primary w-100 mb-4">
+                    </form>
+
+                    <hr class="w-100">
+                    <a th:href="@{/login}" style="text-decoration: none" class="d-block mb-2">Back to Log in</a>
+                    <a th:href="@{/sign}" style="text-decoration: none" class="d-block">Create new account</a>
+
+                    <div class="alert alert-danger mt-3" th:if="${error}" th:text="${error}"></div>
+                    <div class="alert alert-success mt-3" th:if="${message}" th:text="${message}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="Fragments/footer :: footer"></footer>
+</body>
+</html>

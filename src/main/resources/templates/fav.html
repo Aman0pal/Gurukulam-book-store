@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="Fragments/header :: header">
+    <meta charset="UTF-8">
+    <title>Favorites</title>
+</head>
+<body>
+<!-- Navbar based on role -->
+<th:block th:if="${session.role == 'owner' || session.role == 'admin'}">
+    <nav th:replace="Fragments/navbar :: navbar"></nav>
+</th:block>
+<th:block th:if="${session.role == 'user'}">
+    <nav th:replace="Fragments/user_navbar :: user_navbar"></nav>
+</th:block>
+
+<div class="container mt-4">
+    <!-- Styled Heading to match filter bar -->
+    <div class="d-flex align-items-center p-3 bg-white rounded shadow-sm border mb-4">
+        <h5 class="mb-0 fw-bold">My Favorite Books ❤️</h5>
+    </div>
+    
+    <!-- Empty state -->
+    <div th:if="${favoriteBooks == null || favoriteBooks.isEmpty()}" class="text-center py-5 mt-4">
+        <div class="bg-white border shadow-sm rounded d-inline-block px-5 py-4 text-center" role="alert">
+            <h4 class="mb-2">📚 No Favorites Yet</h4>
+            <p class="mb-3 text-muted">You haven't added any books to your favorites.</p>
+            <a href="/home" class="btn btn-outline-primary btn-sm">Explore Books</a>
+        </div>
+    </div>
+    
+    <!-- Favorite Books Grid -->
+    <div class="row" th:if="${favoriteBooks != null && !favoriteBooks.isEmpty()}">
+        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mt-4" th:each="book : ${favoriteBooks}">
+            <div class="card shadow-sm h-100" style="text-align: center; border-radius: 12px; overflow: hidden;">
+                <!-- Card Header: Title & Author -->
+                <div class="card-header bg-white border-bottom-0 py-2 px-1">
+                    <h6 th:text="${book.book_name}" class="fw-bold mb-1 text-truncate" th:title="${book.book_name}"></h6>
+                    <small th:text="${book.book_author}" class="text-muted text-truncate d-block" th:title="${book.book_author}"></small>
+                </div>
+                
+                <!-- Book Image -->
+                <img th:src="@{/Images/book.png}" alt="Book Cover" class="card-img-top mx-auto p-2" style="max-height: 120px; object-fit: contain;">
+                
+                <!-- Card Footer: Actions -->
+                <div class="card-footer bg-white border-top-0 d-flex flex-column gap-2 pb-3 px-2">
+                    <a th:if="${book.pdf_file_path != null}" th:href="@{${book.pdf_file_path}}" target="_blank" class="btn btn-primary btn-sm w-100">Read</a>
+                    <button th:if="${book.pdf_file_path == null}" class="btn btn-primary btn-sm w-100" disabled>No PDF</button>
+                    
+                    <form th:action="@{/remove_favorite}" method="post" class="m-0 w-100">
+                        <input type="hidden" name="book_no" th:value="${book.book_no}" />
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">Remove</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="Fragments/footer :: footer"></footer>
+</body>
+</html>

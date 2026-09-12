@@ -1,0 +1,79 @@
+<head th:fragment="header">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<!--    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">-->
+    <title>Home</title>
+    <style>
+        [data-bs-theme="light"] body {
+            background-color: #f8f9fa;
+        }
+        [data-bs-theme="light"] .navbar {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #e9ecef;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* White background elements that should be dark in dark mode */
+        [data-bs-theme="dark"] .bg-white {
+            background-color: #212529 !important;
+        }
+        
+        /* Handle logo image color in dark mode */
+        [data-bs-theme="dark"] .navbar-brand img[alt="logo"] {
+            filter: invert(1) hue-rotate(180deg);
+        }
+        
+        /* Re-create "upper side" elevation effect for dark mode */
+        [data-bs-theme="dark"] .navbar {
+            border-bottom: 1px solid #3b4248 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
+            background-color: #1a1d20 !important;
+        }
+        [data-bs-theme="dark"] .shadow-sm {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
+            border: 1px solid #3b4248 !important;
+        }
+        [data-bs-theme="dark"] .border {
+            border-color: #3b4248 !important;
+        }
+        
+        .role-badge {
+            background-color: #212529;
+            color: #ffffff;
+        }
+        [data-bs-theme="dark"] .role-badge {
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+    </style>
+    <script>
+        // Load theme before page render to prevent flicker
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcons(newTheme);
+        }
+
+        function updateThemeIcons(theme) {
+            const sunSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+            const moonSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+            
+            document.querySelectorAll('.theme-icon').forEach(icon => {
+                icon.innerHTML = theme === 'dark' ? sunSvg : moonSvg;
+            });
+        }
+        
+        // Setup initial icons once DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            updateThemeIcons(document.documentElement.getAttribute('data-bs-theme'));
+        });
+    </script>
+</head>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="Fragments/header :: header">
+    <meta charset="UTF-8">
+    <title>home</title>
+</head>
+<body>
+<nav th:replace="Fragments/navbar :: navbar"></nav>
+<div class="container mt-4">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="p-3 bg-white rounded shadow-sm border text-center">
+                <h6 class="text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">Total Users</h6>
+                <h2 class="mb-0 fw-bold" style="color: #0dcaf0;" th:text="${totalUsers}">0</h2>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 bg-white rounded shadow-sm border text-center">
+                <h6 class="text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">Total Admins</h6>
+                <h2 class="mb-0 fw-bold" style="color: #fd7e14;" th:text="${totalAdmins}">0</h2>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container mt-3 mb-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 bg-white rounded shadow-sm border">
+        <!-- Left side: Filter & Search controls -->
+        <div class="d-flex flex-column gap-3">
+            
+            <!-- Row 1: Title and Filter -->
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <h5 class="mb-0 fw-bold text-nowrap" style="width: 140px;">Data Base Users</h5>
+                
+                <div class="dropdown" style="width: 280px;">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center" type="button" id="roleDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <span>Filter by Role</span>
+                    </button>
+                    <ul class="dropdown-menu shadow-sm w-100" aria-labelledby="roleDropdown">
+                        <li><a class="dropdown-item" th:classappend="${selectedUserRole == 'All'} ? 'active' : ''" th:href="@{/filter-user-role(userRole='All')}">All Users</a></li>
+                        <li><a class="dropdown-item" th:classappend="${selectedUserRole == 'Admin' || selectedUserRole == 'admin'} ? 'active' : ''" th:href="@{/filter-user-role(userRole='Admin')}">Admin</a></li>
+                        <li><a class="dropdown-item" th:classappend="${selectedUserRole == 'User' || selectedUserRole == 'user'} ? 'active' : ''" th:href="@{/filter-user-role(userRole='User')}">User</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Row 2: Search -->
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <h5 class="mb-0 fw-bold text-nowrap" style="width: 140px;">Search user :</h5>
+                
+                <form th:action="@{/search-db-user}" method="get" class="d-flex align-items-center mb-0 m-0 p-0" style="width: 280px; position: relative;">
+                    <input type="text" id="userSearchInput" name="query" class="form-control me-2" placeholder="username or email" th:value="${param.query}" autocomplete="off" required>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    
+                    <!-- Search Suggestions Dropdown -->
+                    <div id="userSearchSuggestions" class="dropdown-menu w-100 mt-1 shadow" style="display: none; position: absolute; top: 100%; z-index: 1050;"></div>
+                </form>
+                
+                <a th:href="@{/dbUser}" class="btn btn-outline-danger" th:if="${(selectedUserRole != null && selectedUserRole != 'All') || param.query != null}">
+                    ✕ Clear
+                </a>
+            </div>
+            
+        </div>
+        
+        <div class="text-end" th:if="${owner != null}">
+            <span class="badge bg-dark mb-1">Owner</span><br>
+            <span class="fw-bold" th:text="${owner.username}"></span>
+            <span class="text-muted small mx-1">|</span>
+            <span class="text-muted small" th:text="${owner.email}"></span>
+        </div>
+    </div>
+</div>
+<div class="container mt-3">
+    <div class="table-responsive bg-white rounded shadow-sm border overflow-hidden">
+        <table class="table table-hover text-center align-middle mb-0">
+            <thead class="table-active">
+                <tr class="border-bottom border-2">
+                    <th>Id</th>
+                    <th>Full name</th>
+                    <th>User_name</th>
+                    <th>Email</th>
+                    <th>Password</th>
+                    <th style="width: 100px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="user:${users}">
+                    <td th:text="${user.id}"></td>
+                    <td th:text="${user.full_name}"></td>
+                    <td th:text="${user.username}"></td>
+                    <td th:text="${user.email}"></td>
+                    <td th:text="${user.password}"></td>
+                    <td class="d-flex gap-2 justify-content-center">
+                        <span th:if="${user.role == 'owner'}" class="badge bg-primary d-flex align-items-center justify-content-center" style="width: 233px; height: 35px; font-size: 14px; margin: 0;">Owner</span>
+                        <span th:if="${user.role == 'admin' && session.role != 'owner'}" class="badge bg-dark d-flex align-items-center justify-content-center" style="width: 125px; height: 35px; font-size: 14px; margin: 0;">Admin</span>
+                        <form th:action="@{/delete_user}" method="post" class="m-0" th:if="${session.role == 'owner' ? user.id != session.user.id : user.role == 'user'}">
+                            <input type="hidden" name="id" th:value="${user.id}"/>
+                            <button type="submit" class="btn btn-outline-danger btn-sm" style="width: 100px; height: 35px;" onclick="return confirm('Are you sure you want to delete this user?');">Delete</button>
+                        </form>
+                        <form th:action="@{/make_admin}" method="post" class="m-0" th:if="${session.role == 'owner' && user.role == 'user'}">
+                            <input type="hidden" name="id" th:value="${user.id}"/>
+                            <button type="submit" class="btn btn-outline-success btn-sm" style="width: 125px; height: 35px; white-space: nowrap;">Make Admin</button>
+                        </form>
+                        <form th:action="@{/remove_admin}" method="post" class="m-0" th:if="${session.role == 'owner' && user.role == 'admin'}">
+                            <input type="hidden" name="id" th:value="${user.id}"/>
+                            <button type="submit" class="btn btn-outline-warning btn-sm" style="width: 125px; height: 35px; white-space: nowrap;">Remove Admin</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<footer th:replace="Fragments/footer :: footer"></footer>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const searchInput = document.getElementById('userSearchInput');
+        const suggestionsBox = document.getElementById('userSearchSuggestions');
+        
+        if (searchInput && suggestionsBox) {
+            searchInput.addEventListener('input', async (e) => {
+                const query = e.target.value.trim();
+                if (query.length === 0) {
+                    suggestionsBox.style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/search-users?query=${encodeURIComponent(query)}`);
+                    const matches = await response.json();
+                    
+                    if (matches.length > 0) {
+                        let html = '';
+                        matches.forEach(match => {
+                            // Extract just the username part before the '(' for the input value
+                            const usernameOnly = match.split(' (')[0];
+                            html += `<a class="dropdown-item" href="#" onclick="document.getElementById('userSearchInput').value='${usernameOnly.replace(/'/g, "\\'")}'; this.closest('form').submit(); return false;">${match}</a>`;
+                        });
+                        suggestionsBox.innerHTML = html;
+                        suggestionsBox.style.display = 'block';
+                    } else {
+                        suggestionsBox.innerHTML = '<span class="dropdown-item text-muted">No matches found</span>';
+                        suggestionsBox.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error fetching user suggestions', error);
+                }
+            });
+
+            // Hide suggestions on outside click
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                    suggestionsBox.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

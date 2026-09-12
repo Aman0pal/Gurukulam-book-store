@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="Fragments/header :: header">
+    <meta charset="UTF-8">
+    <title>Manage Book Requests</title>
+</head>
+<body>
+<nav th:replace="Fragments/navbar :: navbar"></nav>
+<div class="container mt-4">
+    <div class="row mb-3 align-items-center">
+        <div class="col">
+            <h3 class="fw-bold m-0">Book Requests Management</h3>
+            <p class="text-muted small">Review and approve books submitted by users.</p>
+        </div>
+        <div class="col-auto">
+            <div class="badge bg-warning text-dark py-2 px-3 shadow-sm" style="font-size: 1rem;">
+                Pending Requests: <span th:text="${pendingCount}">0</span>
+            </div>
+        </div>
+    </div>
+    
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="table-responsive bg-white rounded shadow-sm border overflow-hidden">
+        <table class="table table-hover text-center align-middle mb-0">
+            <thead class="table-active">
+            <tr class="border-bottom border-2">
+                <th>Req ID</th>
+                <th>Requested By</th>
+                <th>Book Name</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Language</th>
+                <th>PDF</th>
+                <th>Status</th>
+                <th style="width: 150px;">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(requests)}">
+                <td colspan="9" class="text-muted p-4">No book requests found.</td>
+            </tr>
+            <tr th:each="req : ${requests}">
+                <td th:text="${req.id}" class="fw-bold text-muted"></td>
+                <td>
+                    <span class="badge bg-secondary" th:text="${req.requested_by}"></span>
+                </td>
+                <td th:text="${req.book_name}" class="fw-semibold"></td>
+                <td th:text="${req.book_author}"></td>
+                <td>
+                    <div th:text="${req.book_category}"></div>
+                    <small class="text-muted" th:text="${req.book_sub_category}"></small>
+                </td>
+                <td th:text="${req.book_language}"></td>
+                <td>
+                    <a th:if="${req.pdf_file_path != null}" th:href="@{${req.pdf_file_path}}" target="_blank" class="btn btn-sm btn-outline-info" title="View PDF">
+                        📄 View
+                    </a>
+                    <span th:if="${req.pdf_file_path == null}" class="text-muted small">N/A</span>
+                </td>
+                <td>
+                    <span th:if="${req.status == 'PENDING'}" class="badge bg-warning text-dark">PENDING</span>
+                    <span th:if="${req.status == 'ACCEPTED'}" class="badge bg-success">ACCEPTED</span>
+                    <span th:if="${req.status == 'REJECTED'}" class="badge bg-danger">REJECTED</span>
+                </td>
+                <td>
+                    <div th:if="${req.status == 'PENDING'}" class="d-flex justify-content-center gap-1">
+                        <form th:action="@{/requests/accept}" method="post" class="m-0" onsubmit="return confirm('Accept this book request? It will be published to the store immediately.');">
+                            <input type="hidden" name="id" th:value="${req.id}"/>
+                            <button type="submit" class="btn btn-success btn-sm" title="Accept & Publish">✔️</button>
+                        </form>
+                        <form th:action="@{/requests/reject}" method="post" class="m-0" onsubmit="return confirm('Reject this book request?');">
+                            <input type="hidden" name="id" th:value="${req.id}"/>
+                            <button type="submit" class="btn btn-danger btn-sm" title="Reject">❌</button>
+                        </form>
+                    </div>
+                    <span th:if="${req.status != 'PENDING'}" class="text-muted small">Reviewed</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<footer th:replace="Fragments/footer :: footer"></footer>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<div th:fragment="filter_bar" class="container mt-4 mb-2"
+     th:attr="data-sel-cat=${selectedCategory}, data-sel-sub=${selectedSubCategory}, data-sel-lang=${selectedLanguage}">
+
+    <div class="d-flex align-items-center flex-wrap gap-3 p-3 bg-white rounded shadow-sm border">
+        <h5 class="mb-0 fw-bold me-2">Filter the books :</h5>
+
+
+
+        <!-- Categories Dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="categoryDropdown"
+                    data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                Categories
+            </button>
+            <ul class="dropdown-menu shadow-sm" aria-labelledby="categoryDropdown">
+                <li><a class="dropdown-item filter-link" data-type="category" data-value="All"
+                       th:classappend="${selectedCategory == 'All' && selectedSubCategory == 'All'} ? 'active' : ''"
+                       href="#">All Categories</a></li>
+                <li th:each="cat, iterStat : ${categories}">
+                    <a class="dropdown-item dropdown-toggle" data-bs-toggle="collapse"
+                       th:attr="data-bs-target='#nestedMenu' + ${iterStat.index}" role="button" aria-expanded="false"
+                       th:classappend="${selectedCategory == cat} ? 'active' : ''"
+                       href="#" th:text="${cat}">Category</a>
+                    <div class="collapse" th:id="'nestedMenu' + ${iterStat.index}">
+                        <ul class="list-unstyled ps-3">
+                            <!-- Option to select just the parent category -->
+                            <li><a class="dropdown-item filter-link" data-type="category" th:data-value="${cat}"
+                                   th:classappend="${selectedCategory == cat && selectedSubCategory == 'All'} ? 'active' : ''" 
+                                   href="#" th:text="'All ' + ${cat}">All</a></li>
+                            
+                            <!-- Subcategories -->
+                            <li th:if="${subCategoriesMap != null && subCategoriesMap.get(cat) != null}" th:each="sub : ${subCategoriesMap.get(cat)}">
+                                <a class="dropdown-item filter-link" data-type="subcategory" th:data-value="${sub}"
+                                   th:classappend="${selectedSubCategory == sub} ? 'active' : ''" 
+                                   href="#" th:text="${sub}">Subcategory</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Languages Dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="languageDropdown"
+                    data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                Languages
+            </button>
+            <ul class="dropdown-menu shadow-sm" aria-labelledby="languageDropdown">
+                <li><a class="dropdown-item filter-link" data-type="language" data-value="All"
+                       th:classappend="${selectedLanguage == 'All'} ? 'active' : ''" href="#">All Languages</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li th:each="lang : ${languages}">
+                    <a class="dropdown-item filter-link" data-type="language"
+                       th:attr="data-value=${lang}"
+                       th:classappend="${selectedLanguage == lang} ? 'active' : ''"
+                       th:text="${lang} + ' Books'" href="#"></a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Active filter badges -->
+        <div class="d-flex gap-2 flex-wrap" id="activeBadges">
+            <span th:if="${selectedCategory != null && selectedCategory != 'All'}"
+                  class="badge bg-primary">
+                Cat: <span th:text="${selectedCategory}"></span>
+            </span>
+            <span th:if="${selectedSubCategory != null && selectedSubCategory != 'All'}"
+                  class="badge bg-info text-dark">
+                Sub: <span th:text="${selectedSubCategory}"></span>
+            </span>
+            <span th:if="${selectedLanguage != null && selectedLanguage != 'All'}"
+                  class="badge bg-success">
+                Lang: <span th:text="${selectedLanguage}"></span>
+            </span>
+        </div>
+
+        <!-- Clear All Filters -->
+        <a href="/home" class="btn btn-sm btn-outline-danger"
+           th:if="${(selectedCategory != null && selectedCategory != 'All') || (selectedSubCategory != null && selectedSubCategory != 'All') || (selectedLanguage != null && selectedLanguage != 'All')}">
+            ✕ Clear Filters
+        </a>
+
+        <!-- Search Books -->
+        <div class="ms-auto" style="position: relative;">
+            <form id="bookSearchForm" class="d-flex mb-0" role="search" th:action="@{/search}" method="get">
+                <input id="bookSearchInput" class="form-control me-2" type="search" placeholder="Search books..." aria-label="Search" name="query" autocomplete="off"/>
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+            <div id="bookSearchSuggestions" class="dropdown-menu w-100 mt-1 shadow" style="display: none; position: absolute; z-index: 1050;"></div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // Read current state from Thymeleaf-rendered data attributes
+            const bar = document.querySelector('[data-sel-cat]');
+            let currentCat = bar ? bar.getAttribute('data-sel-cat') : 'All';
+            let currentSub = bar ? bar.getAttribute('data-sel-sub') : 'All';
+            let currentLang = bar ? bar.getAttribute('data-sel-lang') : 'All';
+
+            function buildUrl(category, subCategory, language) {
+                let params = [];
+                if (category && category !== 'All') params.push('category=' + encodeURIComponent(category));
+                if (subCategory && subCategory !== 'All') params.push('subCategory=' + encodeURIComponent(subCategory));
+                if (language && language !== 'All') params.push('language=' + encodeURIComponent(language));
+                return '/filter' + (params.length ? '?' + params.join('&') : '');
+            }
+
+            document.querySelectorAll('.filter-link').forEach(function (link) {
+                link.addEventListener('click', function (e) {
+                    // Only intercept navigation, not collapse toggles for subcategory expanders
+                    const type = this.getAttribute('data-type');
+                    const value = this.getAttribute('data-value');
+
+                    if (!type || !value) return; // let collapse do its thing
+
+                    // Prevent navigation only for filter actions
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    let newCat = currentCat;
+                    let newSub = currentSub;
+                    let newLang = currentLang;
+
+                    if (type === 'category') {
+                        newCat = value;
+                        newSub = 'All'; // clear subcategory when selecting main category
+                    } else if (type === 'subcategory') {
+                        newSub = value;
+                        newCat = 'All'; // clear main category when selecting subcategory
+                    } else if (type === 'language') {
+                        newLang = value;
+                    }
+
+                    window.location.href = buildUrl(newCat, newSub, newLang);
+                });
+            });
+
+            // Book Search Autocomplete
+            const searchInput = document.getElementById('bookSearchInput');
+            const suggestionsBox = document.getElementById('bookSearchSuggestions');
+            const searchForm = document.getElementById('bookSearchForm');
+
+            searchInput.addEventListener('input', async (e) => {
+                const query = e.target.value.trim();
+                if (query.length === 0) {
+                    suggestionsBox.style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/search-books?query=${encodeURIComponent(query)}`);
+                    const matches = await response.json();
+                    
+                    if (matches.length > 0) {
+                        let html = '';
+                        matches.forEach(match => {
+                            html += `<a class="dropdown-item" href="#" onclick="
+                                document.getElementById('bookSearchInput').value='${match.replace(/'/g, "\\'")}';
+                                const hi = document.createElement('input');
+                                hi.type='hidden'; hi.name='exact'; hi.value='true';
+                                document.getElementById('bookSearchForm').appendChild(hi);
+                                document.getElementById('bookSearchForm').submit();
+                                return false;
+                            ">${match}</a>`;
+                        });
+                        suggestionsBox.innerHTML = html;
+                        suggestionsBox.style.display = 'block';
+                    } else {
+                        suggestionsBox.innerHTML = '<span class="dropdown-item text-muted">No matches found</span>';
+                        suggestionsBox.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error fetching book suggestions', error);
+                }
+            });
+
+            // Hide suggestions on outside click
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                    suggestionsBox.style.display = 'none';
+                }
+            });
+        })();
+    </script>
+</div>
