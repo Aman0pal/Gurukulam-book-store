@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="Fragments/header :: header">
+    <meta charset="UTF-8">
+    <title>home</title>
+</head>
+<body>
+<nav th:replace="Fragments/navbar :: navbar"></nav>
+<div class="container mt-4">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded shadow-sm border text-center h-100 d-flex flex-column justify-content-center">
+                <h6 class="text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">Total Books</h6>
+                <h2 class="mb-0 fw-bold" style="color: #6f42c1;" th:text="${totalBooks}">0</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded shadow-sm border text-center h-100 d-flex flex-column justify-content-center align-items-center">
+                <h6 class="text-muted mb-2 text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">Manage Books Metadata</h6>
+                <button class="btn btn-outline-primary btn-sm px-4 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#metadataModal">Edit</button>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded shadow-sm border text-center h-100 d-flex flex-column justify-content-center align-items-center">
+                <h6 class="text-muted mb-2 text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">Manage Requests</h6>
+                <a th:href="@{/manage_requests}" class="btn btn-outline-warning btn-sm px-4 rounded-pill fw-bold">Review</a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded shadow-sm border text-center h-100 d-flex flex-column justify-content-center align-items-center">
+                <h6 class="text-muted mb-2 text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">Broadcast Notice</h6>
+                <button class="btn btn-outline-success btn-sm px-4 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#broadcastModal">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container mt-3">
+    <div class="table-responsive bg-white rounded shadow-sm border overflow-hidden">
+        <table class="table table-hover text-center align-middle mb-0">
+            <thead class="table-active">
+            <tr class="border-bottom border-2">
+                <th>Book No</th>
+                <th>Book Name</th>
+                <th>Book Author</th>
+                <th>Book Category</th>
+                <th>Book Sub Category</th>
+                <th>Book Language</th>
+                <th style="width: 100px;">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="book:${books}">
+                <td th:text="${book.book_no}"></td>
+                <td th:text="${book.book_name}"></td>
+                <td th:text="${book.book_author}"></td>
+                <td th:text="${book.book_category}"></td>
+                <td th:text="${book.book_sub_category}"></td>
+                <td th:text="${book.book_language}"></td>
+                <td>
+                    <form th:action="@{/delete_book}" method="post" class="m-0" style="margin:0;">
+                        <input type="hidden" name="id" th:value="${book.book_no}"/>
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this book?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="metadataModal" tabindex="-1" aria-labelledby="metadataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="margin-top: 8vh;">
+        <div class="modal-content" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="metadataModalLabel">Manage Books Metadata</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex justify-content-between align-items-end border-bottom mb-4">
+                    <ul class="nav nav-tabs border-0 mb-0" id="metadataTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="lang-tab" data-bs-toggle="tab" data-bs-target="#lang" type="button" role="tab" onclick="updateTotalLabel('Languages')">Languages</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="cat-tab" data-bs-toggle="tab" data-bs-target="#cat" type="button" role="tab" onclick="updateTotalLabel('Categories')">Categories</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="subcat-tab" data-bs-toggle="tab" data-bs-target="#subcat" type="button" role="tab" onclick="updateTotalLabel('Sub Categories')">Sub Categories</button>
+                        </li>
+                    </ul>
+                    <div class="text-muted fw-bold pb-2 pe-2" id="activeTotalDisplay" style="font-size: 0.9rem;">Total Languages: <span id="activeTotalCount">0</span></div>
+                </div>
+                <div class="tab-content" id="metadataTabContent">
+                    <div class="tab-pane fade show active" id="lang" role="tabpanel">
+                        <div class="d-flex mb-3 gap-2">
+                            <input type="text" id="newLangName" class="form-control border w-100" placeholder="New Language Name">
+                            <button class="btn btn-primary text-nowrap" onclick="addMetadata('lang')">Add Language</button>
+                        </div>
+                        <ul class="list-group list-group-flush border rounded" id="langList" style="height: 350px; overflow-y: auto;"></ul>
+                    </div>
+                    <div class="tab-pane fade" id="cat" role="tabpanel">
+                        <div class="d-flex mb-3 gap-2">
+                            <input type="text" id="newCatName" class="form-control border w-100" placeholder="New Category Name">
+                            <button class="btn btn-primary text-nowrap" onclick="addMetadata('cat')">Add Category</button>
+                        </div>
+                        <ul class="list-group list-group-flush border rounded" id="catList" style="height: 350px; overflow-y: auto;"></ul>
+                    </div>
+                    <div class="tab-pane fade" id="subcat" role="tabpanel">
+                        <div class="d-flex mb-3 gap-2">
+                            <select id="subCatParent" class="form-select border w-auto">
+                                <option value="" disabled selected>-- Select Parent Category --</option>
+                            </select>
+                            <input type="text" id="newSubCatName" class="form-control border w-100" placeholder="New Sub Category Name">
+                            <button class="btn btn-primary text-nowrap" onclick="addMetadata('subcat')">Add Sub Category</button>
+                        </div>
+                        <ul class="list-group list-group-flush border rounded" id="subcatList" style="height: 350px; overflow-y: auto;"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab switching styles (Bootstrap handles active classes by default via data-bs-toggle, no custom JS needed)
+
+    let currentCategories = [];
+    let currentCounts = { 'Languages': 0, 'Categories': 0, 'Sub Categories': 0 };
+    let currentActiveTab = 'Languages';
+
+    function updateTotalLabel(tabName) {
+        currentActiveTab = tabName;
+        document.getElementById('activeTotalDisplay').innerHTML = `Total ${tabName}: <span id="activeTotalCount">${currentCounts[tabName]}</span>`;
+    }
+
+    async function loadMetadata() {
+        const [langRes, catRes, subcatRes] = await Promise.all([
+            fetch('/api/metadata/languages'),
+            fetch('/api/metadata/categories'),
+            fetch('/api/metadata/subcategories')
+        ]);
+        const languages = await langRes.json();
+        const categories = await catRes.json();
+        const subcategories = await subcatRes.json();
+        
+        currentCounts['Languages'] = languages.length;
+        currentCounts['Categories'] = categories.length;
+        currentCounts['Sub Categories'] = subcategories.length;
+        
+        updateTotalLabel(currentActiveTab);
+
+        currentCategories = categories;
+
+        renderList('langList', languages, 'lang');
+        renderList('catList', categories, 'cat');
+        renderSubcatList(subcategories);
+        
+        // Populate parent category dropdown
+        const select = document.getElementById('subCatParent');
+        select.innerHTML = '<option value="" disabled selected>-- Select Parent Category --</option>';
+        categories.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.name;
+            opt.textContent = c.name;
+            select.appendChild(opt);
+        });
+    }
+
+    function renderList(elementId, items, type) {
+        const ul = document.getElementById(elementId);
+        ul.innerHTML = '';
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
+            li.innerHTML = `
+                <span>${item.name} <small class="text-muted ms-2">(${item.bookCount} books)</small></span>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteMetadata('${type}', ${item.id})">Delete</button>
+            `;
+            ul.appendChild(li);
+        });
+    }
+
+    function renderSubcatList(subcats) {
+        const ul = document.getElementById('subcatList');
+        ul.innerHTML = '';
+        
+        subcats.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
+            li.innerHTML = `
+                <div>
+                    <span class="badge ${getColorForCategory(item.parentCategoryName)} me-2 rounded-pill">${item.parentCategoryName}</span>
+                    <span>${item.name} <small class="text-muted ms-2">(${item.bookCount} books)</small></span>
+                </div>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteMetadata('subcat', ${item.id})">Delete</button>
+            `;
+            ul.appendChild(li);
+        });
+    }
+
+    async function addMetadata(type) {
+        let url = '/api/metadata/';
+        const fd = new FormData();
+        
+        if (type === 'lang') {
+            const val = document.getElementById('newLangName').value;
+            if (!val) return;
+            fd.append('name', val);
+            url += 'languages';
+            document.getElementById('newLangName').value = '';
+        } else if (type === 'cat') {
+            const val = document.getElementById('newCatName').value;
+            if (!val) return;
+            fd.append('name', val);
+            url += 'categories';
+            document.getElementById('newCatName').value = '';
+        } else if (type === 'subcat') {
+            const parent = document.getElementById('subCatParent').value;
+            const val = document.getElementById('newSubCatName').value;
+            if (!val || !parent) return;
+            fd.append('parentCategoryName', parent);
+            fd.append('name', val);
+            url += 'subcategories';
+            document.getElementById('newSubCatName').value = '';
+        }
+
+        await fetch(url, { method: 'POST', body: fd });
+        loadMetadata();
+    }
+
+    function getColorForCategory(name) {
+        const colors = ['bg-primary', 'bg-success', 'bg-danger', 'bg-warning text-dark', 'bg-info text-dark', 'bg-dark', 'bg-secondary'];
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return colors[Math.abs(hash) % colors.length];
+    }
+
+    async function deleteMetadata(type, id) {
+        if (!confirm('Are you sure you want to delete this item?')) return;
+        
+        let url = '/api/metadata/';
+        if (type === 'lang') url += 'languages/delete';
+        if (type === 'cat') url += 'categories/delete';
+        if (type === 'subcat') url += 'subcategories/delete';
+        
+        const fd = new FormData();
+        fd.append('id', id);
+        await fetch(url, { method: 'POST', body: fd });
+        loadMetadata();
+    }
+
+    // Load data when modal opens
+    document.getElementById('metadataModal').addEventListener('show.bs.modal', function () {
+        loadMetadata();
+    });
+</script>
+
+<footer th:replace="Fragments/footer :: footer"></footer>
+</body>
+</html>

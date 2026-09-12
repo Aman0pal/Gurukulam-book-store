@@ -1,0 +1,53 @@
+
+<main th:fragment="book_card">
+    <div class="container">
+
+        <!-- No books found message -->
+        <div th:if="${books == null || books.isEmpty()}"
+             class="text-center py-5 mt-4">
+            <div class="bg-white border shadow-sm rounded d-inline-block px-5 py-4 text-center" role="alert">
+                <h4 class="mb-2">📚 No Books Found</h4>
+                <p class="mb-3 text-muted">No books are available for the selected filter combination.</p>
+                <a href="/home" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+            </div>
+        </div>
+
+        <div class="row" th:if="${books != null && !books.isEmpty()}">
+            <div class="col-lg-3 col-md-4 col-sm-6 mt-5" th:each="book:${books}">
+                <div class="card" style="text-align: center">
+                    <div class="card-header bg-secondary" >
+                        <p th:text="${book.book_name}" class="text-light mb-0"></p>
+                    </div>
+                    <img th:src="@{/Images/book.png}" alt="Book Cover" class="card-img-top img-thumbnail" style="max-height: 180px; object-fit: cover;">
+
+                    <div class="card-body">
+                        <p th:text="${book.book_author}" class="alert alert-light mb-2"></p>
+                        <p th:text="${book.book_category}" class="alert alert-light mb-2"></p>
+                        <p th:text="${book.book_language}" class="alert alert-light mb-2"></p>
+                    </div>
+
+                    <div class="card-footer d-flex justify-content-center align-items-center gap-2">
+                        <!-- Guest user: redirect to login -->
+                        <a th:if="${session.user == null || session.user.id == null}" th:href="@{/login}" class="btn btn-sm" title="Add to favorite" style="text-decoration: none; background-color: transparent !important; border: 1px solid #dc3545; color: #dc3545; font-size: 1.5rem; line-height: 1; padding: 0.15rem 0.5rem;">♡</a>
+                        
+                        <!-- Logged in user: NOT favorited -> Add -->
+                        <form th:if="${session.user != null && session.user.id != null && !session.user.isFavorite(book.book_no)}" th:action="@{/add_favorite}" method="post" class="m-0">
+                            <input type="hidden" name="book_no" th:value="${book.book_no}" />
+                            <button type="submit" class="btn btn-sm" title="Add to favorite" style="background-color: transparent !important; border: 1px solid #dc3545; color: #dc3545; font-size: 1.5rem; line-height: 1; padding: 0.15rem 0.5rem;">♡</button>
+                        </form>
+                        
+                        <!-- Logged in user: IS favorited -> Remove -->
+                        <form th:if="${session.user != null && session.user.id != null && session.user.isFavorite(book.book_no)}" th:action="@{/remove_favorite}" method="post" class="m-0">
+                            <input type="hidden" name="book_no" th:value="${book.book_no}" />
+                            <button type="submit" class="btn btn-sm" title="Remove from favorite" style="background-color: transparent !important; border: 1px solid #dc3545; color: #dc3545; font-size: 1.5rem; line-height: 1; padding: 0.15rem 0.5rem;">❤️</button>
+                        </form>
+                        <a th:if="${book.pdf_file_path != null}" th:href="@{${book.pdf_file_path}}" target="_blank" class="btn btn-secondary btn-sm">Read</a>
+                        <button th:if="${book.pdf_file_path == null}" class="btn btn-secondary btn-sm" disabled>No PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+

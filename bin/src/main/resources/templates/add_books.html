@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="Fragments/header :: header">
+    <meta charset="UTF-8">
+    <title>Add Book</title>
+</head>
+<body>
+    <th:block th:if="${session.role == 'admin' || session.role == 'owner'}">
+        <nav th:replace="~{Fragments/navbar :: navbar}"></nav>
+    </th:block>
+    <th:block th:if="${session.role == 'user'}">
+        <nav th:replace="~{Fragments/user_navbar :: user_navbar}"></nav>
+    </th:block>
+
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <div>
+                    <img th:src="@{/Images/boy.png}" class="card-img" alt="">
+                </div>
+            </div>
+            <div class="col d-flex justify-content-center align-items-center" style="margin-top: 100px;">
+                <div class="container text-center" style="max-width: 400px;">
+
+                    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: large;">
+                        <h2><span th:text="${session.role == 'admin' || session.role == 'owner' ? 'Add Book in Gurukulam' : 'Request to Add Book'}">Add Book in Gurukulam</span></h2>
+                        <p th:if="${session.role == 'user'}" class="text-muted small mb-0 mt-1">Admins & Owners will review your submission.</p>
+                    </div>
+
+                    <form th:action="@{/book_data}" method="post" class="mt-4" enctype="multipart/form-data">
+                        <input type="text" name="book_name" placeholder="Book name"
+                               pattern="^(?=.*[a-zA-Z])[a-zA-Z0-9\s.,'\-:]+$"
+                               title="Book Name must contain alphabets (letters only or letters with numbers)"
+                               required class="form-control mb-3 text-center">
+
+                        <input type="text" name="book_author" placeholder="Book author"
+                               pattern="^(?=.*[a-zA-Z])[a-zA-Z0-9\s.,'\-:]+$"
+                               title="Author Name must contain alphabets (letters only or letters with numbers)"
+                               required class="form-control mb-3 text-center">
+
+                        <select name="book_category" id="book_category" required class="form-select mb-3 text-center" onchange="onCategoryChange()">
+                            <option value="" disabled selected>-- Select Category --</option>
+                            <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat}"></option>
+                        </select>
+
+                        <select name="book_sub_category" id="book_sub_category" required class="form-select mb-3 text-center">
+                            <option value="" selected disabled>-- Select Sub Category --</option>
+                        </select>
+
+                        <select name="book_language" id="book_language" required class="form-select mb-3 text-center">
+                            <option value="" disabled selected>-- Select Language --</option>
+                            <option th:each="lang : ${languages}" th:value="${lang}" th:text="${lang}"></option>
+                        </select>
+
+                        <input type="file" name="pdfFile" accept="application/pdf" required class="form-control mb-3 text-center">
+
+                        <button type="submit" name="submit" class="btn btn-primary w-100 mt-3" th:text="${session.role == 'admin' || session.role == 'owner' ? 'Add Book' : 'Submit for Approval'}">Add Book</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const subCategories = /*[[${subCategoriesMap}]]*/ {};
+        /*]]>*/
+
+        function onCategoryChange() {
+            const categorySelect = document.getElementById('book_category');
+            const subCategorySelect = document.getElementById('book_sub_category');
+            const selectedCat = categorySelect.value;
+
+            subCategorySelect.innerHTML = '<option value="" selected disabled>-- Select Sub Category --</option>';
+
+            if (subCategories[selectedCat]) {
+                subCategories[selectedCat].forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub;
+                    option.textContent = sub;
+                    subCategorySelect.appendChild(option);
+                });
+            }
+        }
+    </script>
+
+    <footer th:replace="Fragments/footer :: footer"></footer>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var successMessage = /*[[${successMessage}]]*/ null;
+        if (successMessage) {
+            Swal.fire({
+                html: `
+                    <div style="margin-bottom: 15px; color: #198754;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" viewBox="0 0 16 16">
+                          <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                        </svg>
+                    </div>
+                    <div style="font-size: 1.25rem; font-weight: bold; margin-bottom: 5px;">Success!</div>
+                    <div style="font-size: 0.95rem; color: #6c757d;">${successMessage}</div>
+                `,
+                showConfirmButton: true,
+                confirmButtonColor: '#0d6efd',
+                confirmButtonText: 'Got it!',
+                timer: 3000,
+                timerProgressBar: true,
+                width: '320px',
+                padding: '2em',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdrop: `rgba(0,0,0,0.3)`,
+                customClass: {
+                    popup: 'shadow-lg rounded-4 border border-light'
+                }
+            });
+        }
+        /*]]>*/
+    </script>
+</body>
+</html>

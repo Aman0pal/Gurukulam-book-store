@@ -1,0 +1,172 @@
+<nav th:fragment="user_navbar" class="navbar navbar-expand-lg ">
+    <div class="container-fluid">
+        <a th:href="@{/user_home}" class="navbar-brand"><img th:src="@{/Images/book.png}" width="100px" height="50px" alt="logo"></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a th:href="@{/user_home}" class="nav-link active" aria-current="page">Gurukulam <sub><sub>Book Store</sub></sub> </a>
+                </li>
+                <li class="nav-item" th:if="${session.user != null && session.user.id != null}">
+                    <a th:href="@{/favorites}" class="nav-link">Favorites ❤️</a>
+                </li>
+                <!-- Guest user: Favorites redirects to login -->
+                <li class="nav-item" th:if="${session.user != null && session.user.id == null}">
+                    <a th:href="@{/login}" class="nav-link">Favorites ❤️</a>
+                </li>
+                <li class="nav-item" th:if="${session.user != null}">
+                    <a th:href="@{/add_book}" class="nav-link">Add Book</a>
+                </li>
+                <!--                <li class="nav-item">-->
+                <!--                    <a th:href="@{/sign}" class="nav-link">Sign-in</a>-->
+                <!--                </li>-->
+
+                <!-- Log in link should show if user is null OR user is guest (id is null) -->
+                <li class="nav-item" th:if="${session.user == null || session.user.id == null}">
+                    <a th:href="@{/login}" class="nav-link">Log-in</a>
+                </li>
+
+                <!--                <li class="nav-item">-->
+                <!--                    <a class="nav-link disabled" aria-disabled="true">Disabled</a>-->
+                <!--                </li>-->
+
+            </ul>
+
+<!--            <div class="ml-auto">-->
+<!--            <span th:if="${session.user != null}">-->
+<!--                Welcome,-->
+<!--                <span th:text="${session.user.username}"></span>-->
+<!--                |-->
+<!--                Role:-->
+<!--                <span th:text="${session.role}"></span>-->
+<!--            </span>-->
+<!--                <a th:if="${session.user != null}"-->
+<!--                   th:href="@{/logout}"-->
+<!--                   class="btn btn-danger btn-sm ml-3">-->
+<!--                    Logout-->
+<!--                </a>-->
+<!--            </div>-->
+
+
+            <ul class="navbar-nav ms-2 align-items-center">
+                <!-- Notification Bell -->
+                <li class="nav-item dropdown me-3" th:if="${session.user != null}">
+                    <a class="nav-link dropdown-toggle position-relative d-flex align-items-center" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" onclick="markNotificationsRead()">
+                        <span style="font-size: 1.2rem;">🔔</span>
+                        <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; display: none;">0</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end p-0 shadow" aria-labelledby="notificationDropdown" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+                            <h6 class="mb-0 fw-bold">Notifications</h6>
+                        </div>
+                        <div id="notificationList">
+                            <!-- JS will populate notifications here -->
+                            <div class="p-3 text-center text-muted small">Loading...</div>
+                        </div>
+                    </div>
+                </li>
+                
+                <!-- Theme Toggle Button -->
+                <li class="nav-item me-3">
+                    <button class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </li>
+                
+                <!-- Show profile dropdown only if user is logged in -->
+                <li class="nav-item dropdown" th:if="${session.user != null}">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown"
+                       role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img th:src="@{/profile.png}"
+                             alt="Profile" class="rounded-circle" style="width:40px; height:40px; object-fit:cover;">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                        <div class="text-center p-3 border-bottom">
+                            <img th:src="@{/profile.png}"
+                                 alt="Profile" class="rounded-circle" style="width:40px; height:40px; object-fit:cover;">
+
+                            <!-- Name and Role -->
+                            <div class="mt-2 d-flex justify-content-center">
+                                <span class="badge role-badge rounded px-3 py-2" style="font-size: 14px; font-weight: 500;">
+                                    <span th:if="${session.user.role == 'owner' || session.user.role == 'admin'}" style="text-transform: capitalize;" th:text="${session.user.role} + ' '"></span><span th:text="${session.user.full_name}"></span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <li><a class="dropdown-item" th:href="@{/profile}">Profile</a></li>
+                        <li><a class="dropdown-item text-danger" th:href="@{/logout}">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+
+    <!-- Notifications Script -->
+    <script th:if="${session.user != null}">
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchNotifications();
+            // Periodically check for new notifications every 30 seconds
+            setInterval(fetchNotifications, 30000);
+        });
+
+        let unreadCount = 0;
+
+        function fetchNotifications() {
+            fetch('/api/notifications')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById("notificationList");
+                    const badge = document.getElementById("notifBadge");
+                    list.innerHTML = "";
+                    
+                    if (data.length === 0) {
+                        list.innerHTML = '<div class="p-3 text-center text-muted small">No notifications</div>';
+                        badge.style.display = 'none';
+                        return;
+                    }
+
+                    // Check local storage for read status to calculate unread badge
+                    let lastReadId = localStorage.getItem('last_read_notif_id') || 0;
+                    unreadCount = data.filter(n => n.id > lastReadId).length;
+                    
+                    if (unreadCount > 0) {
+                        badge.textContent = unreadCount;
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+
+                    data.forEach(n => {
+                        const dateObj = new Date(n.created_at);
+                        const dateStr = dateObj.toLocaleString();
+                        
+                        list.innerHTML += `
+                            <div class="dropdown-item p-3 border-bottom text-wrap" style="white-space: normal;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="badge bg-primary">${n.topic}</span>
+                                    <small class="text-muted" style="font-size: 0.7rem;">${dateStr}</small>
+                                </div>
+                                <div class="small fw-semibold text-dark mb-1">${n.message}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">From: ${n.sender_name} (To: ${n.target_audience})</div>
+                            </div>
+                        `;
+                    });
+                });
+        }
+
+        function markNotificationsRead() {
+            fetch('/api/notifications')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        localStorage.setItem('last_read_notif_id', data[0].id);
+                    }
+                    const badge = document.getElementById("notifBadge");
+                    if (badge) badge.style.display = 'none';
+                });
+        }
+    </script>
+</nav>

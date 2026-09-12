@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="Fragments/header :: header">
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <nav th:replace="Fragments/login_navbar :: login_navbar"></nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <div>
+                    <img th:src="@{/Images/boy.png}" class="card-img" alt="">
+                </div>
+            </div>
+            <div class="col d-flex justify-content-center align-items-center" style="margin-top: 100px;">
+                <div class="container text-center" style="max-width: 400px">
+
+                    <div style="font-family: Arial, Helvetica, sans-serif; font-size: large;">
+                        <h2>Create new account in Gurukulam</h2>
+                    </div>
+
+                    <form id="signupForm" th:action="@{/sign_in_data}" method="post" class="mt-4">
+                        <input type="text" name="full_name" placeholder="full name" required
+                               pattern="[A-Za-z\s]+" title="Name should only contain letters and spaces"
+                               class="form-control mb-3 text-center">
+                               
+                        <div>
+                            <input type="text" id="usernameInput" name="username" placeholder="username" required
+                                   pattern="^(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d_.]+$" title="Username must contain both letters and numbers (Use underscore or dot )"
+                                   class="form-control mb-1 text-center">
+                            <div id="usernameFeedback" class="small text-danger mb-3" style="display: none;"></div>
+                        </div>
+                        
+                        <div>
+                            <input type="email" id="emailInput" name="email" placeholder="email" required
+                                   class="form-control mb-1 text-center">
+                            <div id="emailFeedback" class="small text-danger mb-3" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="position-relative mb-3">
+                            <input type="password" id="passwordInput" name="password" placeholder="enter password" required
+                                   minlength="6" maxlength="15"
+                                   class="form-control text-center pe-5" style="border-radius: 20px;">
+                            <span class="position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer; color: #6c757d;" onclick="togglePassword('passwordInput', this)">
+                                <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </span>
+                        </div>
+                               
+                        <div>
+                            <div class="position-relative mb-1">
+                                <input type="password" id="confirmPasswordInput" name="confirm_password" placeholder="confirm password" required
+                                       minlength="6" maxlength="15"
+                                       class="form-control text-center pe-5" style="border-radius: 20px;">
+                                <span class="position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer; color: #6c757d;" onclick="togglePassword('confirmPasswordInput', this)">
+                                    <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                </span>
+                            </div>
+                            <div id="passwordFeedback" class="small text-danger mb-3" style="display: none;">Passwords do not match</div>
+                        </div>
+
+                        <input type="hidden" name="role" value="user">
+
+                        <input type="submit" name="submit" value="Create account" class="btn btn-primary w-100 mb-4">
+                    </form>
+
+                    <script>
+                        const usernameInput = document.getElementById('usernameInput');
+                        const usernameFeedback = document.getElementById('usernameFeedback');
+                        const emailInput = document.getElementById('emailInput');
+                        const emailFeedback = document.getElementById('emailFeedback');
+                        const passwordInput = document.getElementById('passwordInput');
+                        const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+                        const passwordFeedback = document.getElementById('passwordFeedback');
+                        const signupForm = document.getElementById('signupForm');
+                        
+                        let isUsernameAvailable = false;
+                        let isEmailAvailable = false;
+
+                        // Check Username
+                        usernameInput.addEventListener('input', async (e) => {
+                            const val = e.target.value.trim();
+                            if (val.length === 0) {
+                                usernameFeedback.style.display = 'none';
+                                isUsernameAvailable = false;
+                                return;
+                            }
+                            try {
+                                const response = await fetch(`/api/check-username?username=${encodeURIComponent(val)}`);
+                                const data = await response.json();
+                                if (!data.available) {
+                                    let suggestionsHtml = '<div class="mt-2 text-dark">Username taken. Suggestions:</div><div class="d-flex flex-wrap gap-2 mt-1 justify-content-center">';
+                                    data.suggestions.forEach(s => {
+                                        suggestionsHtml += `<span class="badge bg-secondary p-2" style="cursor:pointer;" onclick="document.getElementById('usernameInput').value='${s}'; document.getElementById('usernameInput').dispatchEvent(new Event('input'))">${s}</span>`;
+                                    });
+                                    suggestionsHtml += '</div>';
+                                    usernameFeedback.innerHTML = suggestionsHtml;
+                                    usernameFeedback.style.display = 'block';
+                                    isUsernameAvailable = false;
+                                } else {
+                                    usernameFeedback.style.display = 'none';
+                                    isUsernameAvailable = true;
+                                }
+                            } catch (error) {
+                                console.error('Error checking username', error);
+                            }
+                        });
+
+                        // Check Email
+                        emailInput.addEventListener('input', async (e) => {
+                            const val = e.target.value.trim();
+                            if (val.length === 0) {
+                                emailFeedback.style.display = 'none';
+                                isEmailAvailable = false;
+                                return;
+                            }
+                            try {
+                                const response = await fetch(`/api/check-email?email=${encodeURIComponent(val)}`);
+                                const data = await response.json();
+                                if (!data.available) {
+                                    emailFeedback.textContent = 'Account already exists with this email, use another email.';
+                                    emailFeedback.style.display = 'block';
+                                    isEmailAvailable = false;
+                                } else {
+                                    emailFeedback.style.display = 'none';
+                                    isEmailAvailable = true;
+                                }
+                            } catch (error) {
+                                console.error('Error checking email', error);
+                            }
+                        });
+
+                        // Check Passwords
+                        function checkPasswords() {
+                            if (passwordInput.value && confirmPasswordInput.value) {
+                                if (passwordInput.value !== confirmPasswordInput.value) {
+                                    passwordFeedback.style.display = 'block';
+                                    return false;
+                                } else {
+                                    passwordFeedback.style.display = 'none';
+                                    return true;
+                                }
+                            }
+                            passwordFeedback.style.display = 'none';
+                            return false;
+                        }
+                        
+                        passwordInput.addEventListener('input', checkPasswords);
+                        confirmPasswordInput.addEventListener('input', checkPasswords);
+
+                        // Form Submission
+                        signupForm.addEventListener('submit', (e) => {
+                            if (!checkPasswords()) {
+                                e.preventDefault();
+                                passwordFeedback.style.display = 'block';
+                            } else if (!isUsernameAvailable && usernameInput.value.length > 0) {
+                                e.preventDefault();
+                                usernameInput.focus();
+                            } else if (!isEmailAvailable && emailInput.value.length > 0) {
+                                e.preventDefault();
+                                emailInput.focus();
+                            }
+                        });
+
+                        const eyeSvg = '<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+                        const eyeSlashSvg = '<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+
+                        function togglePassword(inputId, span) {
+                            const input = document.getElementById(inputId);
+                            if (input.type === 'password') {
+                                input.type = 'text';
+                                span.innerHTML = eyeSlashSvg;
+                            } else {
+                                input.type = 'password';
+                                span.innerHTML = eyeSvg;
+                            }
+                        }
+                    </script>
+
+                    <hr class="w-100">
+                    <a th:href="@{/login}" style="text-decoration: none" class="d-block mb-2">Already have an account? Log in</a>
+
+                    <div class="alert alert-danger mt-3" th:if="${error}" th:text="${error}"></div>
+                    <div class="alert alert-success mt-3" th:if="${success}" th:text="${success}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="Fragments/footer :: footer"></footer>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
