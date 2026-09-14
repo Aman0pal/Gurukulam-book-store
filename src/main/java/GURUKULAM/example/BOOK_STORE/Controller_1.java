@@ -148,6 +148,9 @@ public class Controller_1 {
         return response;
     }
 
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
     @PostMapping("/book_data")
     public String Add_book_formhandler(@ModelAttribute Books books, @RequestParam("pdfFile") org.springframework.web.multipart.MultipartFile pdfFile, HttpSession session, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
         if (!SessionUtil.isLoggedIn(session)) {
@@ -156,21 +159,7 @@ public class Controller_1 {
         
         String savedFilePath = null;
         if (!pdfFile.isEmpty()) {
-            try {
-                String uploadDir = "uploads/pdfs/";
-                java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
-                if (!java.nio.file.Files.exists(uploadPath)) {
-                    java.nio.file.Files.createDirectories(uploadPath);
-                }
-                
-                String filename = java.util.UUID.randomUUID().toString() + "_" + pdfFile.getOriginalFilename();
-                java.nio.file.Path filePath = uploadPath.resolve(filename);
-                java.nio.file.Files.copy(pdfFile.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                
-                savedFilePath = "/" + uploadDir + filename;
-            } catch (java.io.IOException e) {
-                e.printStackTrace();
-            }
+            savedFilePath = cloudinaryService.uploadFile(pdfFile);
         }
         
         if (SessionUtil.isAdmin(session)) {
