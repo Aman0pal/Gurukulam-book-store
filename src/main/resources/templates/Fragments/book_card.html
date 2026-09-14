@@ -41,7 +41,11 @@
                             <input type="hidden" name="book_no" th:value="${book.book_no}" />
                             <button type="submit" class="btn btn-sm" title="Remove from favorite" style="background-color: transparent !important; border: 1px solid #dc3545; color: #dc3545; font-size: 1.5rem; line-height: 1; padding: 0.15rem 0.5rem;">❤️</button>
                         </form>
-                        <a th:if="${book.pdf_file_path != null}" th:href="@{${book.pdf_file_path}}" target="_blank" class="btn btn-secondary btn-sm">Read</a>
+                        <!-- Guest user: redirect to login -->
+                        <a th:if="${book.pdf_file_path != null && (session.user == null || session.user.id == null)}" th:href="@{/login}" class="btn btn-secondary btn-sm">Read</a>
+                        
+                        <!-- Logged in user: link to PDF -->
+                        <a th:if="${book.pdf_file_path != null && session.user != null && session.user.id != null}" th:href="@{${book.pdf_file_path}}" target="_blank" class="btn btn-secondary btn-sm">Read</a>
                         <button th:if="${book.pdf_file_path == null}" class="btn btn-secondary btn-sm" disabled>No PDF</button>
                     </div>
                 </div>
