@@ -36,6 +36,21 @@ public class EmailService {
             return false;
         }
     }
+    public boolean sendSignupOtpEmail(String toEmail, String otp) {
+        try {
+            String subject = "Gurukulam Book Store - Account Verification OTP";
+            String textContent = "Hello,\n\n"
+                    + "Welcome to Gurukulam Book Store! We received a request to create a new account with this email address.\n\n"
+                    + "Your One-Time Password (OTP) for account verification is: " + otp + "\n\n"
+                    + "If you did not request to create an account, please ignore this email.\n\n"
+                    + "Thank you,\nGurukulam Book Store Team";
+                    
+            return sendEmailViaBrevo(toEmail, subject, textContent);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     public boolean sendWelcomeEmail(String toEmail, String name) {
         try {

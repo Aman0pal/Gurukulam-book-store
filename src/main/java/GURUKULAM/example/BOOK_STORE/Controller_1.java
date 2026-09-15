@@ -77,7 +77,7 @@ public class Controller_1 {
         int otp = 100000 + random.nextInt(900000);
         
         // Send email
-        boolean isSent = emailService.sendOtpEmail(user.getEmail(), String.valueOf(otp));
+        boolean isSent = emailService.sendSignupOtpEmail(user.getEmail(), String.valueOf(otp));
         
         if (isSent) {
             session.setAttribute("signup_user", user);
