@@ -39,10 +39,8 @@
                     <small th:text="${book.book_author}" class="text-light text-opacity-75 text-truncate d-block" th:title="${book.book_author}"></small>
                 </div>
                 
-                <!-- Book Image -->
-                <div class="d-flex align-items-center justify-content-center p-2" style="min-height: 120px;">
-                    <img th:src="@{/Images/book.png}" alt="Book Cover" class="card-img-top mx-auto" style="max-height: 100px; object-fit: contain; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));">
-                </div>
+                <!-- Spacer Body area for background artwork to be visible -->
+                <div class="flex-grow-1" style="min-height: 120px;"></div>
                 
                 <!-- Card Footer: Actions -->
                 <div class="card-footer border-top-0 d-flex flex-column gap-2 pb-3 px-2 mt-auto" style="background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(4px);">
