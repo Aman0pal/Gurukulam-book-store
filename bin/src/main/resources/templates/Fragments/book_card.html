@@ -1,4 +1,5 @@
 
+
 <main th:fragment="book_card">
     <div class="container">
 
@@ -12,42 +13,58 @@
             </div>
         </div>
 
+        <!-- Book Cards Grid formatted like favorites book_card -->
         <div class="row" th:if="${books != null && !books.isEmpty()}">
-            <div class="col-lg-3 col-md-4 col-sm-6 mt-5" th:each="book:${books}">
-                <div class="card" style="text-align: center">
-                    <div class="card-header bg-secondary" >
-                        <p th:text="${book.book_name}" class="text-light mb-0"></p>
+            <div class="col-lg-2 col-md-3 col-sm-4 col-6 mt-4" th:each="book:${books}">
+                <div class="card shadow-sm h-100 border-0" 
+                     style="text-align: center; border-radius: 12px; overflow: hidden; background: url('/Images/card_bg.jpg') center/cover no-repeat; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+                    
+                    <!-- Card Header: Title & Author (Matches Favorite Card Structure) -->
+                    <div class="card-header border-bottom-0 py-2 px-2" style="background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(4px);">
+                        <h6 th:text="${book.book_name}" class="fw-bold mb-1 text-truncate text-white" th:title="${book.book_name}"></h6>
+                        <small th:text="${book.book_author}" class="text-light text-opacity-75 text-truncate d-block" th:title="${book.book_author}"></small>
                     </div>
-                    <img th:src="@{/Images/book.png}" alt="Book Cover" class="card-img-top img-thumbnail" style="max-height: 180px; object-fit: cover;">
-
-                    <div class="card-body">
-                        <p th:text="${book.book_author}" class="alert alert-light mb-2"></p>
-                        <p th:text="${book.book_category}" class="alert alert-light mb-2"></p>
-                        <p th:text="${book.book_language}" class="alert alert-light mb-2"></p>
+                    
+                    <!-- Book Image -->
+                    <div class="d-flex align-items-center justify-content-center p-2" style="min-height: 120px;">
+                        <img th:src="@{/Images/book.png}" alt="Book Cover" class="card-img-top mx-auto" style="max-height: 100px; object-fit: contain; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));">
                     </div>
 
-                    <div class="card-footer d-flex justify-content-center align-items-center gap-2">
-                        <!-- Guest user: redirect to login -->
-                        <a th:if="${session.user == null || session.user.id == null}" th:href="@{/login}" class="btn btn-sm" title="Add to favorite" style="text-decoration: none; background-color: transparent !important; border: 1px solid #dc3545; color: #dc3545; font-size: 1.5rem; line-height: 1; padding: 0.15rem 0.5rem;">♡</a>
+                    <!-- Category & Language -->
+                    <div class="px-2 mb-2 d-flex flex-wrap justify-content-center gap-1">
+                        <span th:if="${book.book_category != null}" th:text="${book.book_category}" class="badge bg-dark bg-opacity-75 text-light border border-secondary border-opacity-50 text-truncate" style="max-width: 90%; font-weight: 500;"></span>
+                        <span th:if="${book.book_language != null}" th:text="${book.book_language}" class="badge bg-dark bg-opacity-75 text-warning border border-warning border-opacity-50 text-truncate" style="max-width: 90%; font-weight: 500;"></span>
+                    </div>
+                    
+                    <!-- Card Footer: Actions (Read & Favorite) -->
+                    <div class="card-footer border-top-0 d-flex align-items-center justify-content-between gap-1 pb-2 px-2 mt-auto" style="background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(4px);">
+                        <!-- Guest user: redirect to login for PDF -->
+                        <a th:if="${book.pdf_file_path != null && (session.user == null || session.user.username == 'Guest')}" th:href="@{/login}" class="btn btn-primary btn-sm flex-grow-1 text-truncate">Read</a>
+                        
+                        <!-- Logged in user: link to PDF -->
+                        <a th:if="${book.pdf_file_path != null && session.user != null && session.user.username != 'Guest'}" th:href="@{${book.pdf_file_path}}" target="_blank" class="btn btn-primary btn-sm flex-grow-1 text-truncate">Read</a>
+                        <button th:if="${book.pdf_file_path == null}" class="btn btn-secondary btn-sm flex-grow-1 text-truncate" disabled>No PDF</button>
+
+                        <!-- Guest user: redirect to login for favorite -->
+                        <a th:if="${session.user == null || session.user.id == null || session.user.username == 'Guest'}" th:href="@{/login}" class="btn btn-outline-danger btn-sm p-1 px-2" title="Add to favorite" style="line-height: 1; font-size: 1.1rem; background-color: rgba(255, 255, 255, 0.15);">♡</a>
                         
                         <!-- Logged in user: NOT favorited -> Add -->
-                        <form th:if="${session.user != null && session.user.id != null && !session.user.isFavorite(book.book_no)}" th:action="@{/add_favorite}" method="post" class="m-0">
+                        <form th:if="${session.user != null && session.user.id != null && session.user.username != 'Guest' && !session.user.isFavorite(book.book_no)}" th:action="@{/add_favorite}" method="post" class="m-0">
                             <input type="hidden" name="book_no" th:value="${book.book_no}" />
-                            <button type="submit" class="btn btn-sm" title="Add to favorite" style="background-color: transparent !important; border: 1px solid #dc3545; color: #dc3545; font-size: 1.5rem; line-height: 1; padding: 0.15rem 0.5rem;">♡</button>
+                            <button type="submit" class="btn btn-outline-danger btn-sm p-1 px-2 text-white" title="Add to favorite" style="line-height: 1; font-size: 1.1rem; background-color: rgba(255, 255, 255, 0.15);">♡</button>
                         </form>
                         
                         <!-- Logged in user: IS favorited -> Remove -->
-                        <form th:if="${session.user != null && session.user.id != null && session.user.isFavorite(book.book_no)}" th:action="@{/remove_favorite}" method="post" class="m-0">
+                        <form th:if="${session.user != null && session.user.id != null && session.user.username != 'Guest' && session.user.isFavorite(book.book_no)}" th:action="@{/remove_favorite}" method="post" class="m-0">
                             <input type="hidden" name="book_no" th:value="${book.book_no}" />
-                            <button type="submit" class="btn btn-sm" title="Remove from favorite" style="background-color: transparent !important; border: 1px solid #dc3545; color: #dc3545; font-size: 1.5rem; line-height: 1; padding: 0.15rem 0.5rem;">❤️</button>
+                            <button type="submit" class="btn btn-danger btn-sm p-1 px-2 text-white" title="Remove from favorite" style="line-height: 1; font-size: 1.1rem;">❤️</button>
                         </form>
-                        <a th:if="${book.pdf_file_path != null}" th:href="@{${book.pdf_file_path}}" target="_blank" class="btn btn-secondary btn-sm">Read</a>
-                        <button th:if="${book.pdf_file_path == null}" class="btn btn-secondary btn-sm" disabled>No PDF</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </main>
+
 
 
