@@ -58,8 +58,8 @@
                         <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; display: none;">0</span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end p-0 shadow" aria-labelledby="notificationDropdown" style="width: 320px; max-height: 400px; overflow-y: auto;">
-                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
-                            <h6 class="mb-0 fw-bold">Notifications</h6>
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-transparent">
+                            <h6 class="mb-0 fw-bold text-body">Notifications</h6>
                         </div>
                         <div id="notificationList">
                             <!-- JS will populate notifications here -->
@@ -79,13 +79,13 @@
                 <li class="nav-item dropdown" th:if="${session.user != null}">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown"
                        role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img th:src="@{/profile.png}"
-                             alt="Profile" class="rounded-circle" style="width:40px; height:40px; object-fit:cover;">
+                        <img th:src="${session.user.imageUrl != null && !session.user.imageUrl.isEmpty() ? session.user.imageUrl : '/profile.png'}"
+                             alt="Profile" class="rounded-circle border" style="width:40px; height:40px; object-fit:cover;">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
                         <div class="text-center p-3 border-bottom">
-                            <img th:src="@{/profile.png}"
-                                 alt="Profile" class="rounded-circle" style="width:40px; height:40px; object-fit:cover;">
+                            <img th:src="${session.user.imageUrl != null && !session.user.imageUrl.isEmpty() ? session.user.imageUrl : '/profile.png'}"
+                                 alt="Profile" class="rounded-circle border" style="width:50px; height:50px; object-fit:cover;">
 
                             <!-- Name and Role -->
                             <div class="mt-2 d-flex justify-content-center">
@@ -149,7 +149,7 @@
                                     <span class="badge bg-primary">${n.topic}</span>
                                     <small class="text-muted" style="font-size: 0.7rem;">${dateStr}</small>
                                 </div>
-                                <div class="small fw-semibold text-dark mb-1">${n.message}</div>
+                                <div class="small fw-semibold mb-1">${n.message}</div>
                                 <div class="text-muted" style="font-size: 0.75rem;">From: ${n.sender_name} (To: ${n.target_audience})</div>
                             </div>
                         `;

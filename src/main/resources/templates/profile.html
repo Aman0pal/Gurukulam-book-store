@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="Fragments/header :: header">
+    <meta charset="UTF-8">
+    <title>User Profile - Gurukulam</title>
+</head>
+<body>
+
+<!-- Navbar based on role -->
+<th:block th:if="${session.role == 'owner' || session.role == 'admin'}">
+    <nav th:replace="Fragments/navbar :: navbar"></nav>
+</th:block>
+<th:block th:if="${session.role == 'user'}">
+    <nav th:replace="Fragments/user_navbar :: user_navbar"></nav>
+</th:block>
+
+<style>
+    /* Profile Banner & Layout */
+    .profile-banner-container {
+        position: relative;
+        height: 200px;
+        background: linear-gradient(135deg, #090a0f 0%, #171b26 50%, #202738 100%);
+        border-radius: 16px 16px 0 0;
+        overflow: hidden;
+    }
+    .enhance-cover-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background-color: #f7d59b;
+        color: #212529;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: none;
+        padding: 6px 18px;
+        border-radius: 25px;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+    .enhance-cover-btn:hover {
+        background-color: #f3c57a;
+        transform: translateY(-1px);
+    }
+
+    /* Profile Avatar Overlapping */
+    .profile-avatar-wrapper {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin-top: -75px;
+        border-radius: 50%;
+        border: 4px solid #ffffff;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        background-color: #e9ecef;
+        overflow: hidden;
+    }
+    [data-bs-theme="dark"] .profile-avatar-wrapper {
+        border-color: #212529;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+    .profile-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Verified pill */
+    .verify-pill {
+        border: 1px dashed #0d6efd;
+        color: #0d6efd;
+        background: rgba(13, 110, 253, 0.05);
+        font-size: 0.8rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    [data-bs-theme="dark"] .verify-pill {
+        border-color: #3d8bfd;
+        color: #6ea8fe;
+        background: rgba(13, 110, 253, 0.15);
+    }
+
+    .edit-profile-pencil-btn {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+    .edit-profile-pencil-btn:hover {
+        transform: rotate(15deg) scale(1.05);
+    }
+
+    /* Uploaded Book Card */
+    .uploaded-book-card {
+        border-radius: 12px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid rgba(0,0,0,0.08);
+    }
+    .uploaded-book-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    }
+    [data-bs-theme="dark"] .uploaded-book-card {
+        border-color: #2c3238;
+    }
+</style>
+
+<div class="container my-4" style="max-width: 1050px;">
+
+    <!-- Top Profile Card with Banner & Information (Matches screenshot structure) -->
+    <div class="bg-white rounded-4 shadow-sm border mb-4">
+        
+        <!-- Cover Banner Image -->
+        <div class="profile-banner-container">
+            <button class="enhance-cover-btn" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                <i class="bi bi-pencil-fill me-1"></i> Enhance cover image
+            </button>
+        </div>
+
+        <!-- Profile Content Box -->
+        <div class="px-4 pb-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start">
+                
+                <!-- Avatar & Identity Info -->
+                <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end gap-3 text-center text-md-start">
+                    
+                    <!-- Circular Profile Picture -->
+                    <div class="profile-avatar-wrapper flex-shrink-0">
+                        <img th:if="${user.imageUrl != null && !user.imageUrl.isEmpty()}" 
+                             th:src="@{${user.imageUrl}}" 
+                             alt="Profile Pic" 
+                             class="profile-avatar-img">
+                        <img th:if="${user.imageUrl == null || user.imageUrl.isEmpty()}" 
+                             th:src="@{/Images/profile.png}" 
+                             alt="Default Profile Pic" 
+                             class="profile-avatar-img">
+                    </div>
+
+                    <!-- Right side of Picture: Name & Below: Username -->
+                    <div class="pt-2">
+                        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2 mb-1">
+                            <!-- Full Name -->
+                            <h2 class="fw-bold mb-0 text-dark-emphasis" th:text="${user.full_name}">Aman Pal</h2>
+                            
+                            <!-- Verified Badge -->
+                            <span class="verify-pill">
+                                <i class="bi bi-shield-fill-check"></i> Verify in 2 minutes
+                            </span>
+
+                            <!-- Role Badge -->
+                            <span th:if="${user.role == 'owner'}" class="badge bg-danger rounded-pill px-3 py-1">Owner</span>
+                            <span th:if="${user.role == 'admin'}" class="badge bg-primary rounded-pill px-3 py-1">Admin</span>
+                            <span th:if="${user.role == 'user'}" class="badge bg-secondary rounded-pill px-3 py-1">Member</span>
+                        </div>
+
+                        <!-- Below Name: Username -->
+                        <div class="text-muted fw-semibold mb-2" style="font-size: 1.05rem;">
+                            <i class="bi bi-at"></i><span th:text="${user.username}">aman0pal</span>
+                        </div>
+
+                        <!-- Email & Institution Details -->
+                        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-3 text-muted small">
+                            <span><i class="bi bi-envelope-fill me-1 text-primary"></i> <span th:text="${user.email}">user@email.com</span></span>
+                            <span><i class="bi bi-building me-1 text-secondary"></i> Krishna Group of Institution (KIOT)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Action Button: Edit Profile -->
+                <div class="mt-3 mt-md-4 text-center text-md-end">
+                    <button class="btn btn-outline-secondary edit-profile-pencil-btn d-inline-flex" data-bs-toggle="modal" data-bs-target="#editProfileModal" title="Edit Profile">
+                        <i class="bi bi-pencil fs-5"></i>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Profile Summary Statistics Bar -->
+            <div class="row g-2 mt-4 pt-3 border-top text-center">
+                <div class="col-sm-4">
+                    <div class="p-2 bg-light rounded-3 border">
+                        <small class="text-muted d-block fw-semibold" style="font-size: 0.75rem;">UPLOADED / SUBMITTED BOOKS</small>
+                        <strong class="fs-4 text-primary" th:text="${myUploadedBooks != null ? myUploadedBooks.size() : 0}">0</strong>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="p-2 bg-light rounded-3 border">
+                        <small class="text-muted d-block fw-semibold" style="font-size: 0.75rem;">FAVORITE BOOKS</small>
+                        <strong class="fs-4 text-danger" th:text="${user.favoriteBooks != null ? user.favoriteBooks.size() : 0}">0</strong>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="p-2 bg-light rounded-3 border">
+                        <small class="text-muted d-block fw-semibold" style="font-size: 0.75rem;">ACCOUNT ROLE</small>
+                        <strong class="fs-4 text-success text-uppercase" th:text="${user.role}">USER</strong>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Uploaded Books Section (Shows Below Account) -->
+    <div class="bg-white rounded-4 shadow-sm border p-4 mb-4">
+        
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <div>
+                <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-journal-arrow-up text-primary"></i> My Uploaded & Submitted Books
+                </h4>
+                <p class="text-muted small mb-0">Track and view the books you have added or requested in Gurukulam Book Store.</p>
+            </div>
+            <a th:href="@{/add_book}" class="btn btn-primary btn-sm px-3 mt-2 mt-sm-0">
+                <i class="bi bi-plus-circle-fill me-1"></i> Add / Request New Book
+            </a>
+        </div>
+
+        <!-- If No Books Uploaded Yet -->
+        <div th:if="${myUploadedBooks == null || myUploadedBooks.isEmpty()}" class="text-center py-5">
+            <div class="p-4 bg-light rounded-4 d-inline-block text-center border" style="max-width: 450px;">
+                <div class="display-6 text-muted mb-2">📚</div>
+                <h5 class="fw-bold mb-1">No Books Uploaded Yet</h5>
+                <p class="text-muted small mb-3">You haven't submitted any books to the library yet. Start sharing knowledge with fellow readers!</p>
+                <a th:href="@{/add_book}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-upload me-1"></i> Upload Your First Book
+                </a>
+            </div>
+        </div>
+
+        <!-- Grid of Uploaded Books -->
+        <div class="row g-3" th:if="${myUploadedBooks != null && !myUploadedBooks.isEmpty()}">
+            <div class="col-lg-4 col-md-6" th:each="req : ${myUploadedBooks}">
+                <div class="card uploaded-book-card h-100 p-3 bg-light bg-opacity-50">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="fw-bold text-truncate mb-0" th:text="${req.book_name}" th:title="${req.book_name}" style="max-width: 70%;">Book Name</h6>
+                        <span th:if="${req.status == 'ACCEPTED'}" class="badge bg-success rounded-pill">Approved</span>
+                        <span th:if="${req.status == 'PENDING'}" class="badge bg-warning text-dark rounded-pill">In Review</span>
+                        <span th:if="${req.status == 'REJECTED'}" class="badge bg-danger rounded-pill">Rejected</span>
+                    </div>
+                    
+                    <small class="text-muted d-block mb-2">
+                        <i class="bi bi-person-fill text-secondary"></i> <span th:text="${req.book_author}">Author Name</span>
+                    </small>
+
+                    <div class="d-flex flex-wrap gap-1 mb-3">
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis" th:text="${req.book_category}">Category</span>
+                        <span class="badge bg-info-subtle text-info-emphasis" th:text="${req.book_language}">Language</span>
+                    </div>
+
+                    <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                        <a th:if="${req.pdf_file_path != null}" th:href="@{${req.pdf_file_path}}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-file-earmark-pdf"></i> View PDF
+                        </a>
+                        <span th:if="${req.pdf_file_path == null}" class="text-muted small">No PDF Attached</span>
+                        <small class="text-muted" th:text="${'#ID-' + req.id}">#ID-1</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Modal: Edit Profile Information (Picture, Username, Full Name) -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="modal-title fw-bold" id="editProfileModalLabel">
+                    <i class="bi bi-person-gear text-primary me-2"></i> Edit Profile Information
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form th:action="@{/update_profile}" method="post" enctype="multipart/form-data">
+                <div class="modal-body p-4">
+                    
+                    <!-- Avatar Preview & Upload -->
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <img id="avatarPreview" 
+                                 th:src="${user.imageUrl != null && !user.imageUrl.isEmpty() ? user.imageUrl : '/Images/profile.png'}" 
+                                 alt="Avatar Preview" 
+                                 class="rounded-circle border shadow-sm" 
+                                 style="width: 100px; height: 100px; object-fit: cover;">
+                            <label for="profilePicInput" class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2 shadow-sm" style="cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="Change Photo">
+                                <i class="bi bi-camera-fill" style="font-size: 0.85rem;"></i>
+                            </label>
+                        </div>
+                        <div class="mt-2">
+                            <input type="file" id="profilePicInput" name="profilePic" accept="image/*" class="form-control form-control-sm mx-auto" style="max-width: 250px;" onchange="previewImage(event)">
+                            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Upload new profile picture (PNG, JPG, WebP)</small>
+                        </div>
+                    </div>
+
+                    <!-- Full Name Field -->
+                    <div class="mb-3 text-start">
+                        <label class="form-label fw-semibold small text-muted">FULL NAME</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                            <input type="text" name="full_name" th:value="${user.full_name}" 
+                                   required pattern="[A-Za-z\s]+" 
+                                   title="Name should only contain letters" 
+                                   class="form-control" placeholder="Enter your full name">
+                        </div>
+                    </div>
+
+                    <!-- Username Field -->
+                    <div class="mb-3 text-start">
+                        <label class="form-label fw-semibold small text-muted">USERNAME</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">@</span>
+                            <input type="text" name="username" th:value="${user.username}" 
+                                   required pattern="^(?=.*[a-zA-Z])[A-Za-z\d_.]+$" 
+                                   title="Username must contain letters (numbers, _ and . allowed)" 
+                                   class="form-control" placeholder="Choose a username">
+                        </div>
+                    </div>
+
+                    <!-- Email Field (Read Only) -->
+                    <div class="mb-3 text-start">
+                        <label class="form-label fw-semibold small text-muted">EMAIL ADDRESS (LOCKED)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                            <input type="email" th:value="${user.email}" disabled class="form-control bg-light text-muted">
+                        </div>
+                        <small class="text-muted" style="font-size: 0.75rem;">Email cannot be modified directly for security reasons.</small>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer border-top p-3">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-check2-circle me-1"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer th:replace="Fragments/footer :: footer"></footer>
+
+<!-- Bootstrap JS & SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwxP6zP4k4nFqFhD5mmnFv5nL4p0+1pP4g5hE2/gB6h2e2E4wLgG" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Image live preview
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('avatarPreview').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Flash Messages
+    var successMsg = /*[[${successMessage}]]*/ null;
+    var errorMsg = /*[[${errorMessage}]]*/ null;
+
+    if (successMsg) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Profile Updated!',
+            text: successMsg,
+            timer: 3000,
+            showConfirmButton: false
+        });
+    } else if (errorMsg) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Update Failed',
+            text: errorMsg,
+            confirmButtonColor: '#dc3545'
+        });
+    }
+    /*]]>*/
+</script>
+
+</body>
+</html>

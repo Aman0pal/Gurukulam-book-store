@@ -470,14 +470,90 @@ public class Controller_1 {
     }
 
     @GetMapping("/profile")
-    public String profile(HttpSession session) {
+    public String profilePage(HttpSession session, Model model) {
         if (!SessionUtil.isLoggedIn(session)) {
             return "redirect:/login";
         }
-        if (SessionUtil.isAdmin(session)) {
-            return "redirect:/home";
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null || sessionUser.getId() == null || "Guest".equals(sessionUser.getUsername())) {
+            return "redirect:/login";
         }
-        return "redirect:/user_home";
+        
+        User dbUser = userRepository.findById(sessionUser.getId()).orElse(null);
+        if (dbUser == null) {
+            return "redirect:/login";
+        }
+        
+        model.addAttribute("user", dbUser);
+        session.setAttribute("user", dbUser);
+        
+        // Uploaded/submitted books by this user
+        List<BookRequest> myUploadedBooks = bookRequestRepository.findByRequestedBy(dbUser.getUsername());
+        model.addAttribute("myUploadedBooks", myUploadedBooks);
+        
+        // Total store books count
+        long totalStoreBooks = bookRepository.count();
+        model.addAttribute("totalStoreBooks", totalStoreBooks);
+        
+        populateMetadata(model);
+        return "profile";
+    }
+
+    @PostMapping("/update_profile")
+    public String updateProfile(
+            @RequestParam("full_name") String fullName,
+            @RequestParam("username") String username,
+            @RequestParam(value = "profilePic", required = false) org.springframework.web.multipart.MultipartFile profilePic,
+            HttpSession session,
+            RedirectAttributes ra) {
+            
+        if (!SessionUtil.isLoggedIn(session)) {
+            return "redirect:/login";
+        }
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null || sessionUser.getId() == null) {
+            return "redirect:/login";
+        }
+        
+        User dbUser = userRepository.findById(sessionUser.getId()).orElse(null);
+        if (dbUser == null) {
+            return "redirect:/login";
+        }
+        
+        // Validate Full Name
+        if (fullName == null || !fullName.matches("[A-Za-z\\s]+")) {
+            ra.addFlashAttribute("errorMessage", "Full Name should only contain letters.");
+            return "redirect:/profile";
+        }
+        
+        // Validate Username
+        if (username == null || !username.matches("^(?=.*[a-zA-Z])[A-Za-z\\d_.]+$")) {
+            ra.addFlashAttribute("errorMessage", "Username must contain letters (numbers, _ and . are allowed).");
+            return "redirect:/profile";
+        }
+        
+        // Check if username is changing and already taken
+        if (!dbUser.getUsername().equalsIgnoreCase(username) && userRepository.existsByUsername(username)) {
+            ra.addFlashAttribute("errorMessage", "Username is already taken. Please choose another.");
+            return "redirect:/profile";
+        }
+        
+        // Handle Profile Picture Upload
+        if (profilePic != null && !profilePic.isEmpty()) {
+            String uploadedUrl = cloudinaryService.uploadFile(profilePic);
+            if (uploadedUrl != null) {
+                dbUser.setImageUrl(uploadedUrl);
+            }
+        }
+        
+        dbUser.setFull_name(fullName.trim());
+        dbUser.setUsername(username.trim());
+        userRepository.save(dbUser);
+        
+        // Keep session updated
+        session.setAttribute("user", dbUser);
+        ra.addFlashAttribute("successMessage", "Profile updated successfully!");
+        return "redirect:/profile";
     }
 
     @GetMapping("/frgt_pass")
