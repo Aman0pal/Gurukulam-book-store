@@ -51,4 +51,7 @@ public interface BookRepository extends JpaRepository<Books, Long> {
 
     @Query("SELECT COUNT(b) FROM Books b WHERE b.book_sub_category = ?1")
     long countBySubCategory(String subCategory);
+
+    @Query("SELECT b FROM Books b WHERE LOWER(b.book_author) = LOWER(?1) AND b.book_no != ?2")
+    List<Books> findOtherBooksByAuthor(String author, Long bookNo);
 }

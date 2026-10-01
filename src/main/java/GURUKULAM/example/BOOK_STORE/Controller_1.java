@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -997,6 +998,33 @@ public class Controller_1 {
         }
         
         return "fav";
+    }
+
+    @GetMapping({"/book/{id}", "/book_detail/{id}"})
+    public String bookDetailPage(@PathVariable("id") Long id, HttpSession session, Model model) {
+        Books book = bookRepository.findById(id).orElse(null);
+        if (book == null) {
+            return "redirect:/home";
+        }
+        model.addAttribute("book", book);
+
+        // Check if book is favorited by logged-in user
+        boolean isFavorite = false;
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser != null && sessionUser.getId() != null) {
+            User dbUser = userRepository.findById(sessionUser.getId()).orElse(null);
+            if (dbUser != null) {
+                isFavorite = dbUser.isFavorite(book.getBook_no());
+            }
+        }
+        model.addAttribute("isFavorite", isFavorite);
+
+        // Fetch other books by the same author
+        List<Books> authorBooks = bookRepository.findOtherBooksByAuthor(book.getBook_author(), book.getBook_no());
+        model.addAttribute("authorBooks", authorBooks);
+
+        populateMetadata(model);
+        return "book_details";
     }
 
     // --- Notification & Broadcast APIs ---
