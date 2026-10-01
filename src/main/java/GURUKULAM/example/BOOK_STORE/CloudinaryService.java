@@ -16,11 +16,18 @@ public class CloudinaryService {
     private Cloudinary cloudinary;
 
     public String uploadFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return null;
+        }
         try {
             // Upload the file to Cloudinary. Setting resource_type to "auto" handles PDFs.
             Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap("resource_type", "auto"));
-            return uploadResult.get("secure_url").toString();
-        } catch (IOException e) {
+            if (uploadResult != null && uploadResult.get("secure_url") != null) {
+                return uploadResult.get("secure_url").toString();
+            }
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error uploading file to Cloudinary: " + e.getMessage());
             e.printStackTrace();
             return null;
         }

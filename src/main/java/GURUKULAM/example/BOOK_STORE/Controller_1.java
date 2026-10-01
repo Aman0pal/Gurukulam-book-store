@@ -158,27 +158,47 @@ public class Controller_1 {
             return "redirect:/login";
         }
         
-        String savedFilePath = null;
-        if (!pdfFile.isEmpty()) {
-            savedFilePath = cloudinaryService.uploadFile(pdfFile);
-        }
-        
-        if (SessionUtil.isAdmin(session)) {
-            if (savedFilePath != null) books.setPdf_file_path(savedFilePath);
-            bookRepository.save(books);
-            redirectAttributes.addFlashAttribute("successMessage", "Book added successfully!");
-        } else {
-            User user = (User) session.getAttribute("user");
-            BookRequest request = new BookRequest(books.getBook_name(), books.getBook_author(), books.getBook_category(), books.getBook_sub_category(), books.getBook_language(), savedFilePath, user.getUsername(), "PENDING");
-            bookRequestRepository.save(request);
+        try {
+            String savedFilePath = null;
+            if (pdfFile != null && !pdfFile.isEmpty()) {
+                savedFilePath = cloudinaryService.uploadFile(pdfFile);
+                if (savedFilePath == null) {
+                    System.err.println("Warning: Cloudinary upload failed or credentials missing. Book will be saved without PDF link.");
+                }
+            }
             
-            Notification notification = new Notification("New Book Submission", "User " + user.getUsername() + " requested to add '" + books.getBook_name() + "'.", "System", "ADMIN", java.time.LocalDateTime.now());
-            notificationRepository.save(notification);
-            
-            Notification ownerNotif = new Notification("New Book Submission", "User " + user.getUsername() + " requested to add '" + books.getBook_name() + "'.", "System", "OWNER", java.time.LocalDateTime.now());
-            notificationRepository.save(ownerNotif);
-            
-            redirectAttributes.addFlashAttribute("successMessage", "Book submitted for approval! An admin or owner will review it shortly.");
+            if (SessionUtil.isAdmin(session)) {
+                if (savedFilePath != null) books.setPdf_file_path(savedFilePath);
+                bookRepository.save(books);
+                if (savedFilePath != null) {
+                    redirectAttributes.addFlashAttribute("successMessage", "Book added successfully with PDF!");
+                } else if (pdfFile != null && !pdfFile.isEmpty()) {
+                    redirectAttributes.addFlashAttribute("successMessage", "Book added successfully! (Note: PDF upload to Cloudinary failed, please check Cloudinary API keys).");
+                } else {
+                    redirectAttributes.addFlashAttribute("successMessage", "Book added successfully!");
+                }
+            } else {
+                User user = (User) session.getAttribute("user");
+                String username = user != null ? user.getUsername() : "User";
+                BookRequest request = new BookRequest(books.getBook_name(), books.getBook_author(), books.getBook_category(), books.getBook_sub_category(), books.getBook_language(), savedFilePath, username, "PENDING");
+                bookRequestRepository.save(request);
+                
+                try {
+                    Notification notification = new Notification("New Book Submission", "User " + username + " requested to add '" + books.getBook_name() + "'.", "System", "ADMIN", java.time.LocalDateTime.now());
+                    notificationRepository.save(notification);
+                    
+                    Notification ownerNotif = new Notification("New Book Submission", "User " + username + " requested to add '" + books.getBook_name() + "'.", "System", "OWNER", java.time.LocalDateTime.now());
+                    notificationRepository.save(ownerNotif);
+                } catch (Exception e) {
+                    System.err.println("Notification save warning: " + e.getMessage());
+                }
+                
+                redirectAttributes.addFlashAttribute("successMessage", "Book submitted for approval! An admin or owner will review it shortly.");
+            }
+        } catch (Exception e) {
+            System.err.println("Error in Add_book_formhandler: " + e.getMessage());
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to add book: " + e.getMessage());
         }
         return "redirect:/add_book";
     }
