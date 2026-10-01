@@ -22,8 +22,12 @@ public class CloudinaryService {
         try {
             // Upload the file to Cloudinary. Setting resource_type to "auto" handles PDFs.
             Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap("resource_type", "auto"));
-            if (uploadResult != null && uploadResult.get("secure_url") != null) {
-                return uploadResult.get("secure_url").toString();
+            if (uploadResult != null) {
+                if (uploadResult.get("secure_url") != null) {
+                    return uploadResult.get("secure_url").toString();
+                } else if (uploadResult.get("url") != null) {
+                    return uploadResult.get("url").toString();
+                }
             }
             return null;
         } catch (Exception e) {

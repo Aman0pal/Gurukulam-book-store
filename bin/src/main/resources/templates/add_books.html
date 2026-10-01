@@ -27,15 +27,11 @@
                         <p th:if="${session.role == 'user'}" class="text-muted small mb-0 mt-1">Admins & Owners will review your submission.</p>
                     </div>
 
-                    <form th:action="@{/book_data}" method="post" class="mt-4" enctype="multipart/form-data">
-                        <input type="text" name="book_name" placeholder="Book name"
-                               pattern="^(?=.*[a-zA-Z])[a-zA-Z0-9\s.,'\-:]+$"
-                               title="Book Name must contain alphabets (letters only or letters with numbers)"
+                    <form th:action="@{/book_data}" method="post" class="mt-4" enctype="multipart/form-data" onsubmit="handleFormSubmit(event)">
+                        <input type="text" name="book_name" id="book_name" placeholder="Book name"
                                required class="form-control mb-3 text-center">
 
-                        <input type="text" name="book_author" placeholder="Book author"
-                               pattern="^(?=.*[a-zA-Z])[a-zA-Z0-9\s.,'\-:]+$"
-                               title="Author Name must contain alphabets (letters only or letters with numbers)"
+                        <input type="text" name="book_author" id="book_author" placeholder="Book author"
                                required class="form-control mb-3 text-center">
 
                         <select name="book_category" id="book_category" required class="form-select mb-3 text-center" onchange="onCategoryChange()">
@@ -52,9 +48,12 @@
                             <option th:each="lang : ${languages}" th:value="${lang}" th:text="${lang}"></option>
                         </select>
 
-                        <input type="file" name="pdfFile" accept="application/pdf" required class="form-control mb-3 text-center">
+                        <div class="mb-3 text-start">
+                            <label class="form-label small text-muted text-center d-block">Upload Book PDF</label>
+                            <input type="file" name="pdfFile" accept="application/pdf" required class="form-control text-center">
+                        </div>
 
-                        <button type="submit" name="submit" class="btn btn-primary w-100 mt-3" th:text="${session.role == 'admin' || session.role == 'owner' ? 'Add Book' : 'Submit for Approval'}">Add Book</button>
+                        <button type="submit" id="submitBtn" name="submit" class="btn btn-primary w-100 mt-2" th:text="${session.role == 'admin' || session.role == 'owner' ? 'Add Book' : 'Submit for Approval'}">Add Book</button>
                     </form>
                 </div>
             </div>
@@ -74,13 +73,28 @@
 
             subCategorySelect.innerHTML = '<option value="" selected disabled>-- Select Sub Category --</option>';
 
-            if (subCategories[selectedCat]) {
+            if (subCategories && subCategories[selectedCat] && subCategories[selectedCat].length > 0) {
                 subCategories[selectedCat].forEach(sub => {
                     const option = document.createElement('option');
                     option.value = sub;
                     option.textContent = sub;
                     subCategorySelect.appendChild(option);
                 });
+            } else {
+                // If no specific subcategories, provide General option
+                const option = document.createElement('option');
+                option.value = 'General';
+                option.textContent = 'General';
+                option.selected = true;
+                subCategorySelect.appendChild(option);
+            }
+        }
+
+        function handleFormSubmit(event) {
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing & Uploading...';
             }
         }
     </script>
